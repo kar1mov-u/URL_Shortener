@@ -8,3 +8,7 @@ type Config struct {
 type URL struct {
 	Original string `json:"original"`
 }
+
+type ErrorResp struct {
+	Error string `json:"err"`
+}

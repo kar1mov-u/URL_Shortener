@@ -33,7 +33,12 @@ func main() {
 		w.Write([]byte("Pong"))
 	})
 
-	router.Get("/urls/create", cfg.createUrl)
+	//Web-endponts
+	router.Get("/", cfg.home)
+	router.Get("/redirect/{hashUrl}", cfg.redirect)
+
+	//API end-points
+	router.Post("/urls/shorten", cfg.createUrl)
 	router.Get("/urls/convert", cfg.convert)
 
 	log.Println("Starting server on port: 8080")
