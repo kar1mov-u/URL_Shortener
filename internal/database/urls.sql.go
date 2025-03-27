@@ -7,23 +7,34 @@ package database
 
 import (
 	"context"
+	"time"
 )
 
 const createEntry = `-- name: CreateEntry :exec
 INSERT INTO urls (
-    original_url, hashed_url, created_at)
+    original_url, hashed_url, created_at, ttl)
     VALUES (
-        $1, $2, NOW()
+        $1, $2, NOW(), $3
     )
 `
 
 type CreateEntryParams struct {
 	OriginalUrl string
 	HashedUrl   string
+	Ttl         time.Time
 }
 
 func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) error {
-	_, err := q.db.ExecContext(ctx, createEntry, arg.OriginalUrl, arg.HashedUrl)
+	_, err := q.db.ExecContext(ctx, createEntry, arg.OriginalUrl, arg.HashedUrl, arg.Ttl)
+	return err
+}
+
+const deleteTtl = `-- name: DeleteTtl :exec
+DELETE FROM urls WHERE ttl<NOW()::time
+`
+
+func (q *Queries) DeleteTtl(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteTtl)
 	return err
 }
 

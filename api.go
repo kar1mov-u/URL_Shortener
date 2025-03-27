@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"shortener/internal/database"
+	"time"
 )
 
 func (cfg *Config) createUrl(w http.ResponseWriter, r *http.Request) {
@@ -35,9 +36,11 @@ func (cfg *Config) createUrl(w http.ResponseWriter, r *http.Request) {
 
 	//if not create hash
 	hashURL := generateHash(data.Original)
+
 	err = cfg.DB.CreateEntry(r.Context(), database.CreateEntryParams{
 		OriginalUrl: data.Original,
 		HashedUrl:   hashURL,
+		Ttl:         time.Now().Add(24 * time.Hour),
 	})
 	if err != nil {
 		respondWithErr(w, 500, err.Error())

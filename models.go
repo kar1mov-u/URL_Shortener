@@ -1,6 +1,9 @@
 package main
 
-import "shortener/internal/database"
+import (
+	"context"
+	"shortener/internal/database"
+)
 
 type Config struct {
 	DB *database.Queries
@@ -11,4 +14,9 @@ type URL struct {
 
 type ErrorResp struct {
 	Error string `json:"err"`
+}
+
+type Worker struct {
+	DB  *database.Queries
+	CTX context.Context
 }

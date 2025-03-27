@@ -31,15 +31,15 @@ func (cfg *Config) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *Config) redirect(w http.ResponseWriter, r *http.Request) {
+
 	hashUrl := chi.URLParam(r, "hashUrl")
 	if len(hashUrl) != 7 {
 		http.Error(w, "Invalid short URL", http.StatusBadRequest)
 		return
 	}
-	//make api call
 
+	//make api call
 	payload := fmt.Sprintf(`{"hash":"%v"}`, hashUrl)
-	// log.Print(payload)
 	req, err := http.NewRequest("GET", "http://localhost:8080/urls/convert", bytes.NewBuffer([]byte(payload)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

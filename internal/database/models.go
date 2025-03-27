@@ -15,4 +15,5 @@ type Url struct {
 	OriginalUrl string
 	HashedUrl   string
 	CreatedAt   time.Time
+	Ttl         time.Time
 }

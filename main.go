@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"shortener/internal/database"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,17 +18,30 @@ import (
 
 func main() {
 	godotenv.Load()
+	//Creating DB connectcion and SQLC
 	DB_URL := os.Getenv("DB_URL")
-	//craete connection to db
 	conn, err := sql.Open("postgres", DB_URL)
 	if err != nil {
 		panic(err)
 	}
-	//connection to sqlc
 	sqlc := database.New(conn)
 
-	cfg := Config{DB: sqlc}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
+	//Configuring/Starting serves
+	worker := Worker{DB: sqlc, CTX: ctx}
+
+	//TTL Deleter
+	go func() {
+		for {
+			worker.ttlDeleter()
+			time.Sleep(time.Hour * 5)
+		}
+	}()
+
+	//Configuring server
+	cfg := Config{DB: sqlc}
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
@@ -40,6 +56,16 @@ func main() {
 	//API end-points
 	router.Post("/urls/shorten", cfg.createUrl)
 	router.Get("/urls/convert", cfg.convert)
+
+	//handling shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	go func() {
+		<-stop
+		log.Println("Killing workers")
+		cancel()
+		os.Exit(0)
+	}()
 
 	log.Println("Starting server on port: 8080")
 	http.ListenAndServe(":8080", router)
